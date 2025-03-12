@@ -2,6 +2,7 @@ import pandas as pd
 import pdfplumber
 import re
 import numpy as np
+import os
 pd.set_option('future.no_silent_downcasting', True)
 
 # Regex search function
@@ -139,6 +140,29 @@ def read_all_pages(pdf):
             continue
     print('No more pages to read ... we are done')
     return base_df
+
+# Function for reading the files in the pdfs folder and save them in a new folders as a dataset
+
+
+def read_and_save_dataset(route):
+    new_datasets_route = 'new_datasets/'
+    # Checks and creates the directory if it does not exist
+    os.makedirs(new_datasets_route, exist_ok=True)
+
+    for file in os.listdir(route):
+        if file.lower().endswith(".pdf"):
+            # Route for reading the files
+            route_pdf = os.path.join(route, file)
+            print(f"📖 Reading: {file}, Route: {route_pdf}")
+            # Read the pages
+            pdf = pdfplumber.open(f'{route_pdf}')
+            whole_pdf = read_all_pages(pdf)
+            # Save the dataset created in the new_datasets folder
+            name_file = file.replace('.pdf', "")
+            route_new_dataset = os.path.join(
+                new_datasets_route, f'{name_file}.parquet')
+            whole_pdf.to_parquet(route_new_dataset, index=False)
+
 
 # Example for use the functions
 #   pdf =  pdfplumber.open('doc_1.pdf')
