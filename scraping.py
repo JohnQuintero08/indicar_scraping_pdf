@@ -4,9 +4,13 @@ import re
 import numpy as np
 pd.set_option('future.no_silent_downcasting', True)
 
+# Regex search function
+
 
 def extract_text(script, text):
     return re.search(script, text).group(1)
+
+# Extract the information of all headers in a page using regex sequence
 
 
 def extract_header(page):
@@ -19,10 +23,14 @@ def extract_header(page):
     car, driver = extract_text(r'Car\s*(.*?)\s*\n', text).split('-')
     return event, round, track, report, session, car, driver
 
+# Extract the table of the page
+
 
 def extract_table(page):
     table = np.array(page.extract_table())
     return table
+
+# Function to check if the information extracted from the header is correct
 
 
 def print_header(header):
@@ -38,9 +46,13 @@ def print_header(header):
     """
     print(result)
 
+# Function that transforms every item of the header into a array with the lenght of the table
+
 
 def full_array(size, param):
     return np.full(size, param)
+
+# Function that fill nan values of  the lap column with the correct lap value
 
 
 def lap_correction(lap_list):
@@ -56,6 +68,8 @@ def lap_correction(lap_list):
         new_list.append(valor)
     return new_list
 
+# Function that asign the data type to the columns and fill empty values with nan
+
 
 def table_correction(df):
     df['Lap'] = lap_correction(df['Lap'])
@@ -70,6 +84,8 @@ def table_correction(df):
         df[col] = df[col].astype(float)
 
     return df
+
+# Function that creates the dataframe from one page
 
 
 def create_df_page(page):
@@ -104,8 +120,11 @@ def create_df_page(page):
 
     return df_page_corrected
 
+# Function to read all the pages of a document
+
 
 def read_all_pages(pdf):
+    # Creates a base page to be concatenated later
     base_df = create_df_page(pdf.pages[0])
     for page in range(1, len(pdf.pages)):
         print(f'Reading page {page}')
@@ -113,6 +132,7 @@ def read_all_pages(pdf):
             new_df = create_df_page(pdf.pages[page])
             base_df = pd.concat([base_df, new_df],
                                 axis=0).reset_index(drop=True)
+        # If any page doesn't have the correct format it throws an error and skip the page. This is especially for the last page
         except:
             print(
                 f'Page # {page+1} was not read it has different content to the format')
