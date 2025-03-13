@@ -3,6 +3,7 @@ import pdfplumber
 import re
 import numpy as np
 import os
+import sys
 pd.set_option('future.no_silent_downcasting', True)
 
 # Regex search function
@@ -145,25 +146,41 @@ def read_all_pages(pdf):
 
 
 def read_and_save_dataset(route):
-    new_datasets_route = 'new_datasets/'
-    # Checks and creates the directory if it does not exist
+    new_datasets_route = './new_datasets/'
+    # Check and creates the directory if it does not exist
     os.makedirs(new_datasets_route, exist_ok=True)
+    try:
 
-    for file in os.listdir(route):
-        if file.lower().endswith(".pdf"):
-            # Route for reading the files
-            route_pdf = os.path.join(route, file)
-            print(f"📖 Reading: {file}, Route: {route_pdf}")
-            # Read the pages
-            pdf = pdfplumber.open(f'{route_pdf}')
-            whole_pdf = read_all_pages(pdf)
-            # Save the dataset created in the new_datasets folder
-            name_file = file.replace('.pdf', "")
-            route_new_dataset = os.path.join(
-                new_datasets_route, f'{name_file}.parquet')
-            whole_pdf.to_parquet(route_new_dataset, index=False)
+        pdf_files = [file for file in os.listdir(
+            route) if file.lower().endswith(".pdf")]
+
+        if not pdf_files:
+            raise FileNotFoundError(
+                f"The folder {route} does not have any pdf file to read")
+
+        for file in os.listdir(route):
+            if file.lower().endswith(".pdf"):
+                route_pdf = os.path.join(route, file)
+                print(f"📖 Reading: {file}, Route: {route_pdf}")
+                pdf = pdfplumber.open(f'{route_pdf}')
+                whole_pdf = read_all_pages(pdf)
+                name_file = file.replace('.pdf', "")
+                route_new_dataset = os.path.join(
+                    new_datasets_route, f'{name_file}.parquet')
+                whole_pdf.to_parquet(route_new_dataset, index=False)
+
+    except FileNotFoundError as e:
+        print(e)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+# Main function
 
 
-# Example for use the functions
-#   pdf =  pdfplumber.open('doc_1.pdf')
-#   whole_pdf = read_all_pages(pdf)
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Error: You must provide a folder path with PDFs")
+        sys.exit(1)
+
+    ruta_pdfs = sys.argv[1]
+    read_and_save_dataset(ruta_pdfs)
